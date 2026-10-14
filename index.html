@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0810">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -576,6 +582,13 @@ buildBG(0);resetPlayer();cam=0;
 let last=performance.now(),acc=0;
 function loop(now){acc+=Math.min(100,now-last);last=now;let n=0;while(acc>=16.67&&n<4){update();acc-=16.67;n++;}render();requestAnimationFrame(loop);}
 requestAnimationFrame(loop);
+</script>
+<script>
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+(function(){let done=false;function fs(){if(done)return;done=true;try{const d=document.documentElement,r=d.requestFullscreen||d.webkitRequestFullscreen;
+ const p=r&&!document.fullscreenElement?r.call(d):null;const lock=()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{});}catch(e){}};
+ if(p&&p.then)p.then(lock).catch(()=>{});else lock();}catch(e){}}
+ addEventListener('pointerdown',fs,{once:true,capture:true});addEventListener('touchstart',fs,{once:true,capture:true,passive:true});addEventListener('keydown',fs,{once:true,capture:true});})();
 </script>
 </body>
 </html>
