@@ -171,14 +171,14 @@ const STAGES=[
   intro:['Valethorn. Reino de ceniza y juramentos rotos.','Ella cruzó la frontera sin estandarte, sin nombre:\nuna misión secreta, un fuego que nadie debía ver.','Busca el poder que duerme bajo el Templo del Alba...\ny el secreto para despertarlo.','Pero los Caballeros Negros nunca duermen.'],
   waves:[['captain']]},
  {title:'II · BOSQUE DE LAS ESPINAS NEGRAS',sub:'Donde el eclipse nunca termina',
-  intro:['CAPITÁN CAÍDO: "Necia... más allá del templo\nsolo hay espinas. Ella te escuchará llegar."','Un eclipse rojo cuelga sobre el bosque.\nLos árboles respiran. Algo canta entre las raíces.','CAMPEONA: "Que cante. Mi sol no conoce el miedo."'],
+  intro:['CAPITÁN CAÍDO: "Necia... más allá del templo\nsolo hay espinas. Ella te escuchará llegar."','Un eclipse rojo cuelga sobre el bosque.\nLos árboles respiran. Algo canta entre las raíces.','SERAPHYNE: "Que cante. Mi sol no conoce el miedo."'],
   waves:[['elf']]},
  {title:'III · EL SANTUARIO PROFANADO',sub:'La Bruja y la Bestia',
-  intro:['Una voz de seda y veneno llena las ruinas...','MORGRAVE: "Tanto oro, tanta luz... Tu sol se\npudrirá aquí, querida. Como el mío."','CAMPEONA: "Yo no vine a rezar, bruja."'],
+  intro:['Una voz de seda y veneno llena las ruinas...','MORGRAVE: "Tanto oro, tanta luz... Tu sol se\npudrirá aquí, querida. Como el mío."','SERAPHYNE: "Yo no vine a rezar, bruja."'],
   waves:[['witch'],['beast']],
   mid:['Morgrave se desvanece en humo negro, riendo.','Las cadenas del santuario se rompen.\nAlgo enorme respira en la oscuridad...']},
  {title:'IV · EL TRONO DE CENIZA',sub:'El Caballero Negro Supremo',
-  intro:['En el corazón del templo la espera una armadura\nque devoró a mil campeones.','VAEL\'DRAXIS: "La profecía no es para ti, hija del sol.\nEs para quien sobreviva a mí."','CAMPEONA: "Entonces quítate del camino."'],
+  intro:['En el corazón del templo la espera una armadura\nque devoró a mil campeones.','VAEL\'DRAXIS: "La profecía no es para ti, hija del sol.\nEs para quien sobreviva a mí."','SERAPHYNE: "Entonces quítate del camino."'],
   waves:[['knight']]}];
 const ENDING=['El Señor Oscuro cae de rodillas.\nSu armadura se agrieta... y se vacía.','Tras el altar, entre el polvo de siglos,\nbrilla un fragmento de cristal dorado.','Es el Fragmento de la Profecía.'];
 const VERSE='"Cuando el sol sangre sobre el trono de ceniza,\nla hija del alba reunirá lo que fue roto.\nSiete fragmentos, siete juramentos:\ny el que porte la luz, despertará al dios dormido."';
@@ -382,11 +382,11 @@ function setupLevel(){cam=0;camMin=0;gateOn=false;gateT=0;routeI=0;pickups=[];ur
  urns=[{x:590,y:305},{x:1600,y:FLOOR},{x:2020,y:215},{x:2550,y:FLOOR},{x:3130,y:225},{x:3330,y:FLOOR}].map(u=>Object.assign(u,{b:0}));}
 function setupForest(){torches=[];
  platforms=[{x:450,y:300,w:140},{x:700,y:240,w:110},{x:945,y:312,w:80},{x:1250,y:270,w:160},{x:1500,y:210,w:120},{x:1795,y:312,w:90},{x:2050,y:260,w:170},
-  {x:2350,y:300,w:120},{x:2630,y:312,w:90},{x:2900,y:230,w:150},{x:3165,y:312,w:80},{x:3400,y:270,w:120},{x:3800,y:300,w:140},{x:4150,y:300,w:140}];
+  {x:2350,y:300,w:120},{x:2630,y:312,w:90},{x:2900,y:260,w:150},{x:3165,y:312,w:80},{x:3400,y:270,w:120},{x:3800,y:300,w:140},{x:4150,y:300,w:140}];
  pits=[{x:900,w:160},{x:1740,w:200},{x:2600,w:150},{x:3140,w:150}].map(p=>Object.assign(p,{lash:0,cd:0}));
  ROUTE=[{x:1150,t:'wolf'},{x:1210,t:'wolf'},{x:1330,t:'wraith'},{x:1560,t:'dryad'},{x:2050,t:'spider'},{x:2220,t:'wolf'},{x:2270,t:'wolf'},{x:2320,t:'wolf'},
   {x:2470,t:'wraith'},{x:2840,t:'dryad'},{x:3010,t:'spider'},{x:3380,t:'wolf'},{x:3430,t:'wolf'},{x:3480,t:'dryad'}];
- urns=[{x:480,y:300},{x:1290,y:270},{x:1530,y:210},{x:2100,y:260},{x:2930,y:230},{x:3520,y:FLOOR}].map(u=>Object.assign(u,{b:0}));
+ urns=[{x:480,y:300},{x:1290,y:270},{x:1530,y:210},{x:2100,y:260},{x:2930,y:260},{x:3520,y:FLOOR}].map(u=>Object.assign(u,{b:0}));
  for(let i=0;i<26;i++)eyes.push({x:rnd(0,WORLD*.5+900),y:rnd(250,370),t:rnd(0,400),s:rnd(.6,1)});}
 const overPit=x=>pits.find(p=>x>p.x+6&&x<p.x+p.w-6);
 function breakUrn(u){u.b=1;S('urn');burst(u.x,u.y-14,14,'#a87a40',3);burst(u.x,u.y-14,6,'#ffd27a',2);
@@ -433,14 +433,14 @@ function update(){
  const busy=P.atkT>0&&P.atk==='sword';
  if(P.dashT>0){P.dashT--;P.vx=P.f*11;if(frame%2===0)parts.push({x:P.x,y:P.y,vx:0,vy:0,life:12,ghost:2,f:P.f,s:0});}
  else if(P.slideT>0){P.slideT--;P.vx=P.f*6.7;if(frame%2===0)parts.push({x:P.x-P.f*20,y:P.y-4,vx:-P.f*rnd(.5,1.5),vy:rnd(-1,-.2),life:18,c:'#a08a60',s:rnd(2,4)});
-  if(P.air||overPit(P.x+P.f*24)||P.x<=22||P.x>=WORLD-22){P.slideT=0;P.vx=overPit(P.x+P.f*24)?0:P.vx*.5;}if(P.slideT<=0)P.slideCd=36;if(PR.jump&&!P.air){P.slideT=0;P.slideCd=36;P.vy=-11.5;P.air=true;S('jump');}}
+  if(P.air||overPit(P.x+P.f*24)||P.x<=22||P.x>=WORLD-22){P.slideT=0;P.vx=overPit(P.x+P.f*24)?0:P.vx*.5;}if(P.slideT<=0)P.slideCd=36;if(PR.jump&&!P.air){P.slideT=0;P.slideCd=36;P.vy=-12.5;P.air=true;S('jump');}}
  else if(P.hurtT>0){P.vx*=.9;}
  else{let mv=P.rootT>0?0:(K.right?1:0)-(K.left?1:0);
   P.crouch=K.down&&!P.air?1:0;if(P.slideCd>0)P.slideCd--;
   if(K.down&&!P.air&&P.rootT<=0&&P.slideCd<=0&&!P.atkT&&(PR.dash||(mv&&(PR.down||PR.left||PR.right)))&&!overPit(P.x+(mv||P.f)*30)){if(mv)P.f=mv;P.slideT=21;P.crouch=0;S('swing');S('land');delete PR.dash;}
   if(P.crouch||P.slideT)mv=0;const sp=(busy?1.2:4.2)*(P.slow>0?.5:1);if(P.rootT>0&&(K.right||K.left))P.f=K.right?1:-1;
   if(mv){P.vx+=(mv*sp-P.vx)*.35;if(!P.atkT)P.f=mv;}else P.vx*=.7;
-  if(PR.jump&&!P.air&&P.rootT<=0){P.vy=-11.5;P.air=true;S('jump');burst(P.x,P.y,6,'#776',2);}
+  if(PR.jump&&!P.air&&P.rootT<=0){P.vy=-12.5;P.air=true;S('jump');burst(P.x,P.y,6,'#776',2);}
   if(!K.jump&&P.vy<-4)P.vy+=.6;
   if(PR.dash&&P.dashCd<=0){P.dashT=12;P.dashCd=45;P.inv=Math.max(P.inv,14);}
   if(P.atkT<=0){if(PR.punch)doAttack('punch');else if(PR.sword)doAttack('sword');
@@ -723,7 +723,7 @@ function drawAtmo(){
  ctx.drawImage(vign,0,0);}
 function bar(x,y,w,h,v,c,bg){ctx.fillStyle='#000';ctx.fillRect(x-2,y-2,w+4,h+4);ctx.fillStyle=bg||'#222';ctx.fillRect(x,y,w,h);ctx.fillStyle=c;ctx.fillRect(x,y,w*clamp(v,0,1),h);ctx.fillStyle='rgba(255,255,255,.2)';ctx.fillRect(x,y,w*clamp(v,0,1),h/3);}
 function drawHUD(){
- ctx.font='bold 13px Georgia';ctx.fillStyle='#f1c40f';ctx.fillText('CAMPEONA SOLAR',16,20);
+ ctx.font='bold 13px Georgia';ctx.fillStyle='#f1c40f';ctx.fillText('SERAPHYNE',16,20);
  bar(16,27,190,12,P.hp/P.maxHp,'#2ecc71');bar(16,44,150,7,P.en/100,'#54a0ff');
  bar(16,56,150,7,P.sp/100,P.sp>=100?(frame%20<10?'#fff6a0':'#ff9f1a'):'#ff9f1a');
  ctx.font='10px Georgia';ctx.fillStyle='#ccc';ctx.fillText('ENERGÍA',172,51);ctx.fillText(P.sp>=100?'RÁFAGA LISTA':'RÁFAGA',172,63);
@@ -742,7 +742,7 @@ function drawTitle(){
  ctx.textAlign='center';ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(0,70,W,150);
  ctx.font='bold 64px Georgia';ctx.fillStyle='#000';ctx.fillText('VALETHORN',W/2+3,143);
  const g=ctx.createLinearGradient(0,95,0,145);g.addColorStop(0,'#fff3b0');g.addColorStop(1,'#c08a10');ctx.fillStyle=g;ctx.fillText('VALETHORN',W/2,140);
- ctx.font='italic 22px Georgia';ctx.fillStyle='#e8d8b0';ctx.fillText('La Campeona Solar y el Fragmento de la Profecía',W/2,180);
+ ctx.font='italic 22px Georgia';ctx.fillStyle='#e8d8b0';ctx.fillText('Seraphyne, la Campeona Solar, y el Fragmento de la Profecía',W/2,180);
  ctx.font='16px Georgia';ctx.fillStyle=`rgba(255,255,255,${.5+.5*Math.sin(frame*.08)})`;ctx.fillText('Toca la pantalla o pulsa cualquier tecla',W/2,260);
  ctx.font='11px Georgia';ctx.fillStyle='#999';ctx.fillText('Teclado: ←→ mover · ↑/Espacio saltar · J puño · K espada · L orbe · I Ráfaga Solar · Shift esquivar · ↓/S agacharse (+dirección: barrida) · P pausa',W/2,438);ctx.textAlign='left';}
 function drawCards(){
