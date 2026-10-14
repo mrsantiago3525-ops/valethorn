@@ -35,6 +35,7 @@ canvas{width:100%;height:100%;display:block;background:#000}
 #rot{display:none;position:fixed;inset:0;background:#000;color:#f1c40f;align-items:center;justify-content:center;text-align:center;font-size:22px;z-index:9;padding:20px}
 @media (orientation:portrait) and (max-width:820px){#rot{display:flex}}
 #bM{position:absolute;top:1.2%;right:1%;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid #b8860b;color:#f1c40f;display:flex;align-items:center;justify-content:center;font-size:16px;z-index:6;cursor:pointer;pointer-events:auto;user-select:none}
+#bNew{position:absolute;left:50%;top:66%;transform:translateX(-50%);padding:8px 16px;border-radius:18px;background:rgba(60,20,90,.75);border:1px solid #b77cff;color:#f0e0ff;font:bold 13px Georgia;display:none;z-index:7;pointer-events:auto;user-select:none}
 #bDev{position:absolute;top:1.2%;right:calc(1% + 42px);height:34px;padding:0 8px;border-radius:17px;background:rgba(120,0,0,.6);border:1px solid #f55;color:#fff;font:bold 12px monospace;display:flex;align-items:center;z-index:7;pointer-events:auto;user-select:none}
 #devM{position:absolute;inset:8% 20%;background:rgba(10,6,14,.94);border:2px solid #b8860b;border-radius:8px;z-index:8;display:none;flex-direction:column;gap:6px;padding:10px;overflow:auto;pointer-events:auto}
 #devM .dt{color:#f1c40f;font:bold 14px Georgia;text-align:center}
@@ -87,7 +88,7 @@ function devInit(){if(!DEV)return;const g=document.getElementById('game'),b=docu
  const m=document.createElement('div');m.id='devM';g.appendChild(m);
  const it=[['Etapa 1',()=>devJump(0,0)],['Jefe Etapa 1',()=>devJump(0,1)],['Etapa 2',()=>devJump(1,0)],['Jefe Etapa 2',()=>devJump(1,1)],
   ['Modo Dios',()=>DEVF.god^=1,'god'],['Ráfaga/Energía ∞',()=>DEVF.inf^=1,'inf'],['Ver hitboxes',()=>DEVF.hit^=1,'hit'],['Rellenar vida',()=>{if(P)P.hp=P.maxHp;}],
-  ['Matar enemigos en pantalla',()=>{for(const e of enemies)if(!e.dead&&e.x>cam-40&&e.x<cam+W+40){e.inv=0;hitEnemy(e,99999,'special',1);}}],['Cerrar',()=>devToggle(false)]];
+  ['Matar enemigos en pantalla',()=>{for(const e of enemies)if(!e.dead&&e.x>cam-40&&e.x<cam+W+40){e.inv=0;hitEnemy(e,99999,'special',1);}}],['Desbloquear todo',()=>{SAVE.dj=1;saveG();toastTxt='Todo desbloqueado';toastT=90;}],['Subir nivel',()=>{if(P)gainXP(xpNeed(SAVE.lv)-SAVE.xp);}],['Reiniciar progreso',()=>{resetProgress();if(P)P.hp=P.maxHp;toastTxt='Progreso reiniciado';toastT=90;}],['Cerrar',()=>devToggle(false)]];
  const draw=()=>{m.innerHTML='<div class="dt">MODO DESARROLLADOR</div>';for(const [t,f,k] of it){const x=document.createElement('button');x.textContent=t+(k?(DEVF[k]?' ✓':' ✗'):'');
    x.addEventListener('click',ev=>{ev.stopPropagation();f();if(k||t==='Rellenar vida'||t.startsWith('Matar'))draw();});m.appendChild(x);}};
  draw();b.addEventListener('pointerdown',ev=>{ev.stopPropagation();ev.preventDefault();draw();devToggle(!devOpen);});
@@ -187,8 +188,29 @@ let state='title',stage=0,wave=0,cam=0,shake=0,hitstop=0,frame=0,flash=0,banner=
 let P,enemies=[],eproj=[],pproj=[],parts=[],texts=[],weather=[],platforms=[];
 let torches=[160,560,960,1340];
 let G1=3400,pits=[],lastSafe=200,eyes=[];let gateOn=false,gateT=0,camMin=0,routeI=0,urns=[],pickups=[],spikes=[],ROUTE=[];
+// ---------- SOULS / PROGRESS ----------
+const UNDEAD={soldier:3,shield:4,archer:3,captain:20,wraith:4,knight:30};
+let SAVE={lv:1,xp:0,dj:0,st:0,ft:0},souls=[];
+function loadG(){try{const j=JSON.parse(localStorage.getItem('vSave')||'null');if(j)SAVE=Object.assign(SAVE,j);}catch(e){}}
+function saveG(){try{localStorage.setItem('vSave',JSON.stringify(SAVE));}catch(e){}}
+function resetProgress(){SAVE={lv:1,xp:0,dj:0,st:0,ft:0};saveG();if(P)applyLv(1);}
+loadG();
+const xpNeed=l=>6+4*l;const atkMul=()=>1+.12*(SAVE.lv-1);
+function applyLv(full){P.maxHp=120+15*(SAVE.lv-1);P.maxEn=100+10*(SAVE.lv-1);if(full){P.hp=P.maxHp;P.en=P.maxEn;}}
+function gainXP(n){SAVE.xp+=n;let up=0;while(SAVE.xp>=xpNeed(SAVE.lv)){SAVE.xp-=xpNeed(SAVE.lv);SAVE.lv++;up=1;}saveG();
+ if(up){applyLv(0);P.hp=P.maxHp;P.en=P.maxEn;flash=16;S('rafaga');S('pickup');banner={text:'NIVEL '+SAVE.lv,sub:'+Vida máx · +Ataque · +Energía',t:110,big:1};
+  for(let i=0;i<40;i++){const a=rnd(0,6.28),v=rnd(2,7);parts.push({x:P.x,y:P.y-50,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rnd(25,45),c:Math.random()<.5?'#d8b0ff':'#fff2a8',s:rnd(3,5),glow:1});}}}
+function enemyDied(e){const v=UNDEAD[e.type];
+ if(v){for(let i=0;i<(e.boss?6:1);i++)souls.push({x:e.x+rnd(-20,20),y:e.y-e.h*.6,vx:rnd(-2,2),vy:rnd(-4,-1),t:0,v:e.boss?Math.ceil(v/6):v});}
+ else{burst(e.x,e.y-e.h*.6,10,'#ff2a2a',2);if(!SAVE.ft){SAVE.ft=1;saveG();addText(P.x,P.y-120,'Mi hechizo no alcanza a los vivos...','#ff6a6a');texts[texts.length-1].life=150;}}
+ if(e.type==='captain'&&!SAVE.dj){SAVE.dj=1;saveG();P.djNew=1;}}
+function updSouls(){for(let i=souls.length-1;i>=0;i--){const o=souls[i];o.t++;
+  if(o.t<25){o.vx*=.92;o.vy*=.92;}else{const dx=P.x-o.x,dy=P.y-55-o.y,d=Math.hypot(dx,dy)||1,sp=Math.min(11,2+o.t*.12);o.vx+=(dx/d*sp-o.vx)*.15;o.vy+=(dy/d*sp-o.vy)*.15;}
+  o.x+=o.vx;o.y+=o.vy;if(o.t>15&&Math.abs(P.x-o.x)<26&&Math.abs(P.y-55-o.y)<50){souls.splice(i,1);S('note');addText(P.x,P.y-110,'+'+o.v+' ALMA','#d8b0ff');gainXP(o.v);}}}
+function drawSouls(){for(const o of souls){ctx.globalCompositeOperation='lighter';G(glowV,o.x,o.y,20+Math.sin(o.t*.3)*4,.9);ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='#f4e8ff';ctx.beginPath();ctx.arc(o.x,o.y,4,0,7);ctx.fill();}}
 function resetPlayer(){P={x:200,y:FLOOR,vx:0,vy:0,w:36,h:100,rootT:0,poison:0,slow:0,grab:null,crouch:0,slideT:0,slideCd:0,f:1,hp:120,maxHp:120,en:100,sp:0,inv:0,air:false,runT:0,
- atk:null,atkT:0,atkId:0,combo:0,comboT:0,dashT:0,dashCd:0,specT:0,hurtT:0};}
+ atk:null,atkT:0,atkId:0,combo:0,comboT:0,dashT:0,dashCd:0,specT:0,hurtT:0,maxEn:100,dj2:0};applyLv(1);}
 for(let i=0;i<70;i++)weather.push({x:rnd(0,W),y:rnd(0,H),s:rnd(1,3),l:rnd(4,12)});
 // ---------- ENEMIES ----------
 const DEF={
@@ -336,13 +358,13 @@ function aiUpdate(e){
 // ---------- PLAYER ATTACKS ----------
 const ATK={punch:{dur:16,a:4,b:9,rng:52,dmg:[8,9,16],kb:3},sword:{dur:26,a:8,b:15,rng:128,dmg:[24],kb:6},orb:{dur:18}};
 function hitEnemy(e,d,kind,dir){
- if(e.inv>0||e.dead)return;
+ if(e.inv>0||e.dead)return;d=Math.round(d*atkMul());
  if(e.type==='shield'&&kind!=='orb'&&kind!=='special'&&e.f===-dir&&e.st!=='wind'){d=Math.ceil(d*.2);addText(e.x,e.y-e.h-10,'¡BLOQUEO!','#aab');S('block');e.blk=1;burst(e.x+e.f*14,e.y-40,6,'#ddd',3);}
  if(e.blk)e.blk=0;else S(kind==='punch'?'punchHit':kind==='orb'?'orbHit':'clang');rumble(70,.25);e.hp-=d;e.hitT=8;P.sp=Math.min(100,P.sp+d*.25);
  if(!e.boss){e.vx=dir*(kind==='sword'?5:3);if(!e.fly){e.vy=-2;}}
  addText(e.x+rnd(-10,10),e.y-e.h-6,d,d>=30?'#ffd700':'#fff');burst(e.x-dir*8,e.y-e.h*.55,8,'#ffd27a',4);
  hitstop=kind==='punch'?2:4;shake=Math.max(shake,kind==='special'?0:4);
- if(e.hp<=0){e.dead=1;S(e.boss?'slam':'death');burst(e.x,e.y-e.h/2,e.boss?80:24,e.boss?'#ffcc33':'#c33',e.boss?8:5);if(e.boss){shake=25;flash=14;}}
+ if(e.hp<=0){e.dead=1;S(e.boss?'slam':'death');burst(e.x,e.y-e.h/2,e.boss?80:24,e.boss?'#ffcc33':'#c33',e.boss?8:5);if(e.boss){shake=25;flash=14;}enemyDied(e);}
 }
 function doAttack(kind){
  const a=ATK[kind];P.atk=kind;P.atkT=a.dur;P.atkId++;S(kind==='sword'?'swing':kind==='punch'?'punch':'orb');
@@ -366,8 +388,9 @@ function burst(x,y,n,c,s){for(let i=0;i<n&&parts.length<350;i++){const a=rnd(0,6
 function addText(x,y,t,c){texts.push({x,y,t:String(t),c,life:50});}
 // ---------- FLOW ----------
 function showCards(arr,then){cards=arr;cardI=0;cardT=0;afterCards=then;state='cards';}
-function startGame(){resetPlayer();stage=0;beginStage();}
-function beginStage(){WORLD=stage===0?4200:stage===1?4400:1500;G1=stage===1?3600:3400;buildBG(stage);enemies=[];eproj=[];pproj=[];wave=0;P.x=200;P.y=FLOOR;P.vx=0;
+function startGame(cont){if(!cont)resetProgress();resetPlayer();stage=cont?SAVE.st:0;beginStage();}
+const hasSave=()=>SAVE.lv>1||SAVE.st>0||SAVE.dj;
+function beginStage(){WORLD=stage===0?4200:stage===1?4400:1500;G1=stage===1?3600:3400;buildBG(stage);enemies=[];eproj=[];pproj=[];souls=[];wave=0;P.x=200;P.y=FLOOR;P.vx=0;
  platforms=stage===3?[{x:350,y:300,w:150},{x:1000,y:300,w:150}]:[{x:420,y:310,w:140},{x:820,y:280,w:160},{x:1150,y:315,w:130}];setupLevel();
  showCards(STAGES[stage].intro,()=>{state='play';banner={text:STAGES[stage].title,sub:STAGES[stage].sub,t:160};waveDelay=stage<=1?-1:90;});}
 function setupLevel(){cam=0;camMin=0;gateOn=false;gateT=0;routeI=0;pickups=[];urns=[];spikes=[];ROUTE=[];
@@ -393,7 +416,9 @@ function breakUrn(u){u.b=1;S('urn');burst(u.x,u.y-14,14,'#a87a40',3);burst(u.x,u
  pickups.push({x:u.x,y:u.y-20,vy:-4,k:Math.random()<.55?'hp':'en',t:0});}
 function stageClear(){P.hp=Math.min(P.maxHp,P.hp+50);
  if(stage===STAGES.length-1){state='victory';victoryT=0;return;}
- stage++;beginStage();}
+ stage++;SAVE.st=Math.min(stage,STAGES.length-1);saveG();
+  if(P.djNew){P.djNew=0;showCards(['✦ HABILIDAD OBTENIDA ✦\nDOBLE SALTO','El alma del Capitán Caído arde en tu interior.','Pulsa SALTAR otra vez en el aire\npara un segundo impulso.'],()=>beginStage());return;}
+  beginStage();}
 function waveCleared(){wave++;
  if(stage===2&&wave===1){showCards(STAGES[2].mid,()=>{state='play';waveDelay=60;});return;}
  if(wave>=STAGES[stage].waves.length){waveDelay=-1;setTimeout(()=>{if(state==='play')stageClear();},1500);banner={text:'ZONA DESPEJADA',t:90};}
@@ -405,7 +430,7 @@ function update(){
  if(paused&&state==='play'){clearPR();anyPress=false;return;}if(state!=='play')paused=false;
  frame++;auMode();
  for(const w of weather){w.y+=w.s*(stage===1?.6:2.2);w.x+=stage===1?Math.sin(frame*.01+w.l):-.8;if(w.y>H){w.y=-10;w.x=rnd(0,W+100);}}
- if(state==='title'||state==='over'||state==='ending'){if(anyPress&&frame>30){if(state==='over'){resetPlayer();beginStage();}else{startGame();}}anyPress=false;clearPR();return;}
+ if(state==='title'||state==='over'||state==='ending'){if(anyPress&&frame>30){if(state==='over'){resetPlayer();beginStage();}else{startGame(state==='title'&&hasSave());}}anyPress=false;clearPR();return;}
  if(state==='cards'){cardT++;if(anyPress&&cardT>20){cardI++;cardT=0;if(cardI>=cards.length)afterCards();}anyPress=false;clearPR();return;}
  if(state==='victory'){victoryT++;updParts();anyPress=false;clearPR();if(victoryT>200&&victoryT<205)showCards(ENDING,()=>{state='ending';frame=0;});return;}
  anyPress=false;
@@ -441,6 +466,7 @@ function update(){
   if(P.crouch||P.slideT)mv=0;const sp=(busy?1.2:4.2)*(P.slow>0?.5:1);if(P.rootT>0&&(K.right||K.left))P.f=K.right?1:-1;
   if(mv){P.vx+=(mv*sp-P.vx)*.35;if(!P.atkT)P.f=mv;}else P.vx*=.7;
   if(PR.jump&&!P.air&&P.rootT<=0){P.vy=-12.5;P.air=true;S('jump');burst(P.x,P.y,6,'#776',2);}
+   else if(PR.jump&&P.air&&SAVE.dj&&!P.dj2&&P.rootT<=0&&!P.grab){P.dj2=1;P.vy=-11;S('jump');for(let i=0;i<16;i++){const a=Math.PI*(i/15),v=rnd(2,4);parts.push({x:P.x,y:P.y-6,vx:Math.cos(a)*v,vy:Math.sin(a)*v*.4+1,life:rnd(14,24),c:i%2?'#fff2a8':'#bfe6ff',s:rnd(2,4),glow:1});}}
   if(!K.jump&&P.vy<-4)P.vy+=.6;
   if(PR.dash&&P.dashCd<=0){P.dashT=12;P.dashCd=45;P.inv=Math.max(P.inv,14);}
   if(P.atkT<=0){if(PR.punch)doAttack('punch');else if(PR.sword)doAttack('sword');
@@ -452,7 +478,7 @@ function update(){
  const wasAir=P.air,pvy=P.vy;P.air=true;
  const pit=overPit(P.x);if(P.y>=FLOOR&&!pit){P.y=FLOOR;P.vy=0;P.air=false;}
  for(const p of platforms)if(P.vy>=0&&P.x>p.x-6&&P.x<p.x+p.w+6&&P.y>=p.y&&P.y-P.vy<=p.y+2&&!(K.jump&&false)){P.y=p.y;P.vy=0;P.air=false;}
- if(wasAir&&!P.air&&pvy>4)S('land');
+ if(!P.air)P.dj2=0;if(wasAir&&!P.air&&pvy>4)S('land');
  if(!P.air&&!overPit(P.x)&&!pits.some(p=>P.x>p.x-40&&P.x<p.x+p.w+40)&&P.y>=FLOOR)lastSafe=P.x;
  if(pit&&P.y>FLOOR+34&&!P.grab){P.grab={t:0,m:0,pit};pit.lash=1;P.atk=null;P.atkT=0;S('squelch');shake=8;P.rootT=0;}
  for(const p of pits){if(p.cd>0)p.cd--;if(p.lash>0&&!P.grab){p.lash++;if(p.lash>14&&p.lash<34&&P.x>p.x-10&&P.x<p.x+p.w+10&&P.y>FLOOR-120)hurtPlayer(10,P.vx>=0?1:-1);if(p.lash>48)p.lash=0;}
@@ -460,8 +486,8 @@ function update(){
  if(gateOn&&P.x<G1+20){P.x=G1+20;P.vx=Math.max(0,P.vx);}
  for(const k of spikes)if(P.y>=FLOOR&&P.x>k.x+4&&P.x<k.x+k.w-4){const d=P.x<k.x+k.w/2?-1:1;if(P.inv<=0&&P.dashT<=0)hurtPlayer(12,d);P.vy=-10;P.vx=d*5;P.air=true;}
  }
- for(let i=pickups.length-1;i>=0;i--){const p=pickups[i];p.t++;p.vy+=.4;p.y+=p.vy;let fl=FLOOR;for(const q of platforms)if(p.x>q.x&&p.x<q.x+q.w&&p.y-p.vy<=q.y+2)fl=Math.min(fl,q.y);if(p.y>=fl){p.y=fl;p.vy=0;}
-  if(Math.abs(P.x-p.x)<28&&Math.abs(P.y-50-p.y)<60){if(p.k==='hp'){P.hp=Math.min(P.maxHp,P.hp+25);addText(p.x,p.y-30,'+25','#2ecc71');}else{P.en=100;P.sp=Math.min(100,P.sp+10);addText(p.x,p.y-30,'ENERGÍA','#7af');}S('pickup');pickups.splice(i,1);}else if(p.t>900)pickups.splice(i,1);}
+ updSouls();for(let i=pickups.length-1;i>=0;i--){const p=pickups[i];p.t++;p.vy+=.4;p.y+=p.vy;let fl=FLOOR;for(const q of platforms)if(p.x>q.x&&p.x<q.x+q.w&&p.y-p.vy<=q.y+2)fl=Math.min(fl,q.y);if(p.y>=fl){p.y=fl;p.vy=0;}
+  if(Math.abs(P.x-p.x)<28&&Math.abs(P.y-50-p.y)<60){if(p.k==='hp'){P.hp=Math.min(P.maxHp,P.hp+25);addText(p.x,p.y-30,'+25','#2ecc71');}else{P.en=P.maxEn;P.sp=Math.min(100,P.sp+10);addText(p.x,p.y-30,'ENERGÍA','#7af');}S('pickup');pickups.splice(i,1);}else if(p.t>900)pickups.splice(i,1);}
  if(!P.air&&Math.abs(P.vx)>.5)P.runT+=Math.abs(P.vx)*.09;
  // projectiles
  for(let i=pproj.length-1;i>=0;i--){const o=pproj[i];o.x+=o.vx;o.life--;if(frame%2===0)parts.push({x:o.x,y:o.y,vx:rnd(-.5,.5),vy:rnd(-.5,.5),life:14,c:'#ffb347',s:3,glow:1});
@@ -680,7 +706,7 @@ function drawLevelObjs(){drawPits();
   for(let x=k.x+2;x<k.x+k.w-6;x+=12){ctx.fillStyle='#6b6470';ctx.beginPath();ctx.moveTo(x,FLOOR+10);ctx.lineTo(x+6,FLOOR-14);ctx.lineTo(x+12,FLOOR+10);ctx.fill();ctx.fillStyle='#a8a0b0';ctx.fillRect(x+5,FLOOR-12,2,8);ctx.fillStyle='#5a0a10';ctx.fillRect(x+5,FLOOR-6,2,3);}}
  for(const u of urns)if(!u.b){const x=u.x,y=u.y;ctx.fillStyle='#5a3a22';ctx.beginPath();ctx.moveTo(x-7,y-30);ctx.quadraticCurveTo(x-16,y-18,x-9,y);ctx.lineTo(x+9,y);ctx.quadraticCurveTo(x+16,y-18,x+7,y-30);ctx.fill();
   ctx.fillStyle='#7a5230';ctx.fillRect(x-8,y-33,16,4);ctx.fillStyle='#d4af37';ctx.fillRect(x-11,y-19,22,2);ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(x+3,y-28,4,26);}
- for(const p of pickups){const bob=Math.sin(p.t*.1)*2,y=p.y-12+bob;ctx.globalCompositeOperation='lighter';G(p.k==='hp'?glowR:glowV,p.x,y,18,.8);ctx.globalCompositeOperation='source-over';
+ drawSouls();for(const p of pickups){const bob=Math.sin(p.t*.1)*2,y=p.y-12+bob;ctx.globalCompositeOperation='lighter';G(p.k==='hp'?glowR:glowV,p.x,y,18,.8);ctx.globalCompositeOperation='source-over';
   ctx.fillStyle=p.k==='hp'?'#ff3a4a':'#6ab0ff';ctx.beginPath();ctx.arc(p.x,y,6,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(p.x-2,y-3,2,2);}
  // arena gate
  const gx=G1;if(stage===1){ctx.fillStyle='#120c08';ctx.fillRect(gx-26,FLOOR-230,22,230);ctx.fillRect(gx+4,FLOOR-230,22,230);}ctx.fillStyle='#1a1620';ctx.fillRect(gx-26,FLOOR-230,22,230);ctx.fillRect(gx+4,FLOOR-230,22,230);ctx.fillStyle='#2a2430';ctx.fillRect(gx-34,FLOOR-246,68,18);
@@ -724,9 +750,10 @@ function drawAtmo(){
 function bar(x,y,w,h,v,c,bg){ctx.fillStyle='#000';ctx.fillRect(x-2,y-2,w+4,h+4);ctx.fillStyle=bg||'#222';ctx.fillRect(x,y,w,h);ctx.fillStyle=c;ctx.fillRect(x,y,w*clamp(v,0,1),h);ctx.fillStyle='rgba(255,255,255,.2)';ctx.fillRect(x,y,w*clamp(v,0,1),h/3);}
 function drawHUD(){
  ctx.font='bold 13px Georgia';ctx.fillStyle='#f1c40f';ctx.fillText('SERAPHYNE',16,20);
- bar(16,27,190,12,P.hp/P.maxHp,'#2ecc71');bar(16,44,150,7,P.en/100,'#54a0ff');
+ bar(16,27,190,12,P.hp/P.maxHp,'#2ecc71');bar(16,44,150,7,P.en/P.maxEn,'#54a0ff');
  bar(16,56,150,7,P.sp/100,P.sp>=100?(frame%20<10?'#fff6a0':'#ff9f1a'):'#ff9f1a');
  ctx.font='10px Georgia';ctx.fillStyle='#ccc';ctx.fillText('ENERGÍA',172,51);ctx.fillText(P.sp>=100?'RÁFAGA LISTA':'RÁFAGA',172,63);
+  bar(16,68,150,5,SAVE.xp/xpNeed(SAVE.lv),'#b77cff');ctx.fillStyle='#d8b0ff';ctx.fillText('ALMAS',172,74);ctx.font='bold 12px Georgia';ctx.fillStyle='#e8c070';ctx.fillText('NV '+SAVE.lv,104,20);if(SAVE.dj){ctx.font='10px Georgia';ctx.fillStyle='#bfe6ff';ctx.fillText('⇈',144,20);}
  const boss=enemies.find(e=>e.boss&&!e.dead);
  if(boss){ctx.font='bold 12px Georgia';ctx.fillStyle='#e8c070';ctx.textAlign='center';ctx.fillText(boss.boss,W/2+60,20);ctx.textAlign='left';
   bar(W/2-130,27,380,12,boss.hp/boss.maxHp,boss.phase===3?'#ff2030':boss.phase===2?'#b030ff':boss.type==='elf'?'#c0306a':'#c0392b');
@@ -743,7 +770,8 @@ function drawTitle(){
  ctx.font='bold 64px Georgia';ctx.fillStyle='#000';ctx.fillText('VALETHORN',W/2+3,143);
  const g=ctx.createLinearGradient(0,95,0,145);g.addColorStop(0,'#fff3b0');g.addColorStop(1,'#c08a10');ctx.fillStyle=g;ctx.fillText('VALETHORN',W/2,140);
  ctx.font='italic 22px Georgia';ctx.fillStyle='#e8d8b0';ctx.fillText('Seraphyne, la Campeona Solar, y el Fragmento de la Profecía',W/2,180);
- ctx.font='16px Georgia';ctx.fillStyle=`rgba(255,255,255,${.5+.5*Math.sin(frame*.08)})`;ctx.fillText('Toca la pantalla o pulsa cualquier tecla',W/2,260);
+ ctx.font='16px Georgia';ctx.fillStyle=`rgba(255,255,255,${.5+.5*Math.sin(frame*.08)})`;ctx.fillText(hasSave()?'Toca para continuar · Nivel '+SAVE.lv+' · Etapa '+(SAVE.st+1):'Toca la pantalla o pulsa cualquier tecla',W/2,260);
+  {const nb=document.getElementById('bNew');if(nb)nb.style.display=hasSave()?'block':'none';}
  ctx.font='11px Georgia';ctx.fillStyle='#999';ctx.fillText('Teclado: ←→ mover · ↑/Espacio saltar · J puño · K espada · L orbe · I Ráfaga Solar · Shift esquivar · ↓/S agacharse (+dirección: barrida) · P pausa',W/2,438);ctx.textAlign='left';}
 function drawCards(){
  ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);ctx.textAlign='center';
@@ -762,7 +790,7 @@ function drawEnding(){
  ctx.fillText('Toca para jugar de nuevo',W/2,420);ctx.textAlign='left';}
 function render(){
  ctx.save();if(shake)ctx.translate(rnd(-shake,shake),rnd(-shake,shake));
- if(state==='title'){drawTitle();}
+ if(state!=='title'){const nb=document.getElementById('bNew');if(nb&&nb.style.display!=='none')nb.style.display='none';}if(state==='title'){drawTitle();}
  else if(state==='ending'){drawEnding();}
  else{drawPlay();drawAtmo();if(state!=='cards')drawHUD();
   if(state==='cards')drawCards();
@@ -892,7 +920,8 @@ function setMute(m){AU.muted=m;localStorage.setItem('vMute',m?'1':'0');const b=d
  if(AU.c){AU.master.gain.setTargetAtTime(m?0:.9,AU.c.currentTime,.05);if(!m){AU.mode=null;}}}
 (()=>{const b=document.getElementById('bM');b.textContent=AU.muted?'🔇':'🔊';b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();auInit();setMute(!AU.muted);});})();
 // ---------- LOOP (fixed step) ----------
-buildBG(0);resetPlayer();cam=0;devInit();
+buildBG(0);resetPlayer();cam=0;devInit();{const g=document.getElementById('game'),nb=document.createElement('div');nb.id='bNew';nb.textContent='NUEVA PARTIDA';g.appendChild(nb);
+nb.addEventListener('pointerdown',ev=>{ev.stopPropagation();ev.preventDefault();if(state!=='title')return;nb.style.display='none';try{auInit&&auInit();}catch(e){}startGame(false);anyPress=false;});}
 let last=performance.now(),acc=0;
 function loop(now){acc+=Math.min(100,now-last);last=now;let n=0;while(acc>=16.67&&n<4){update();acc-=16.67;n++;}render();requestAnimationFrame(loop);}
 requestAnimationFrame(loop);
