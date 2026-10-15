@@ -85,18 +85,63 @@ const keymap={ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'le
  j:'punch',J:'punch',k:'sword',K:'sword',l:'orb',L:'orb',i:'special',I:'special',Shift:'dash',u:'dash',U:'dash',Enter:'jump',c:'slide',C:'slide',q:'swap',Q:'swap',m:'map',M:'map'};
 addEventListener('keydown',e=>{if(e.key==='Escape'&&mapOpen){mapOpen=false;return;}if((e.key==='Escape'||e.key==='p'||e.key==='P')&&state==='play'){paused=!paused;return;}const k=keymap[e.key];if(k){press(k,1);e.preventDefault();}else anyPress=true;});
 addEventListener('keyup',e=>{const k=keymap[e.key];if(k)press(k,0);});
-document.querySelectorAll('.btn').forEach(b=>{const k=b.dataset.k;
- const on=e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){};press(k,1);b.classList.add('on');};
- const off=e=>{press(k,0);b.classList.remove('on');};
- b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('lostpointercapture',off);});
-(()=>{const dp=document.getElementById('dp');if(!dp)return;const els={};dp.querySelectorAll('.dk').forEach(e=>els[e.dataset.d]=e);
- const map={left:'left',right:'right',up:'lookup',down:'down'};let pid=null;
- const apply=e=>{const r=dp.getBoundingClientRect(),nx=((e.clientX-r.left)/r.width-.5)*2,ny=((e.clientY-r.top)/r.height-.5)*2;
-  const st={left:nx<-.28,right:nx>.28,up:ny<-.28,down:ny>.28};for(const d in st){press(map[d],st[d]?1:0);els[d].classList.toggle('on',st[d]);}};
- const rel=()=>{pid=null;for(const d in map){press(map[d],0);els[d].classList.remove('on');}};
- dp.addEventListener('pointerdown',e=>{if(pid!==null)return;e.preventDefault();pid=e.pointerId;try{dp.setPointerCapture(pid)}catch(_){}apply(e);});
- dp.addEventListener('pointermove',e=>{if(e.pointerId===pid){e.preventDefault();apply(e);}});
- const up=e=>{if(e.pointerId===pid)rel();};dp.addEventListener('pointerup',up);dp.addEventListener('pointercancel',up);dp.addEventListener('lostpointercapture',up);})();
+// --- Touch controller v18: every finger tracked by pointerId; re-evaluated on move; released on any loss of focus ---
+const TCH=(()=>{
+ const dp=document.getElementById('dp'),dpEls={};if(dp)dp.querySelectorAll('.dk').forEach(e=>dpEls[e.dataset.d]=e);
+ const dmap={left:'left',right:'right',up:'lookup',down:'down'};
+ const ptrs=new Map(); // pointerId -> {src:'dp'|'btn', el, type}
+ let held={};let touchEv=false,touchCount=0;
+ const btnAt=(x,y)=>{const el=document.elementFromPoint(x,y);return el&&el.closest?el.closest('.btn'):null;};
+ const dpKeys=(e,out)=>{const r=dp.getBoundingClientRect(),nx=((e.clientX-r.left)/r.width-.5)*2,ny=((e.clientY-r.top)/r.height-.5)*2;
+  if(nx<-.28)out.left=1;if(nx>.28)out.right=1;if(ny<-.28)out.lookup=1;if(ny>.28)out.down=1;};
+ function refresh(){ // recompute the set of touch-held keys from the active pointers
+  const want={};const btnOn=new Set();
+  for(const [id,p] of ptrs){
+   if(p.src==='dp'&&dp){dpKeys(p.last,want);}
+   else if(p.last){const b=btnAt(p.last.clientX,p.last.clientY);if(b&&b.dataset.k){want[b.dataset.k]=1;btnOn.add(b);}}
+  }
+  for(const k in held)if(!want[k]){press(k,0);delete held[k];}
+  for(const k in want)if(!held[k]){held[k]=1;press(k,1);}
+  document.querySelectorAll('.btn.on').forEach(b=>{if(!btnOn.has(b))b.classList.remove('on');});
+  btnOn.forEach(b=>b.classList.add('on'));
+  for(const d in dpEls)dpEls[d].classList.toggle('on',!!want[dmap[d]]);
+ }
+ function releaseTouch(){ptrs.clear();refresh();for(const k in held){press(k,0);delete held[k];}}
+ function releaseAll(){releaseTouch();for(const k in K)if(K[k])press(k,0);clearPR();}
+ const reg=(src,el)=>e=>{if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault();
+  if(src==='dp'){for(const p of ptrs.values())if(p.src==='dp')return;}
+  ptrs.set(e.pointerId,{src,el,type:e.pointerType,last:{clientX:e.clientX,clientY:e.clientY}});
+  try{el.releasePointerCapture(e.pointerId);}catch(_){}
+  refresh();};
+ document.querySelectorAll('.btn').forEach(b=>b.addEventListener('pointerdown',reg('btn',b)));
+ if(dp)dp.addEventListener('pointerdown',reg('dp',dp));
+ const mv=e=>{let p=ptrs.get(e.pointerId);
+  if(!p){ // adopt a finger that is already down (e.g. after a forced release on resize) when it is over a control
+   if(e.pointerType==='mouse'||!(e.buttons&1)&&e.pointerType!=='touch'&&e.pointerType!=='pen')return;
+   const el=document.elementFromPoint(e.clientX,e.clientY);if(!el||!el.closest)return;const b=el.closest('.btn'),d=dp&&el.closest('#dp');
+   if(d){for(const q of ptrs.values())if(q.src==='dp')return;p={src:'dp',el:dp,type:e.pointerType};}else if(b)p={src:'btn',el:b,type:e.pointerType};else return;
+   ptrs.set(e.pointerId,p);}
+  if(e.cancelable)e.preventDefault();p.last={clientX:e.clientX,clientY:e.clientY};refresh();};
+ const up=e=>{if(ptrs.delete(e.pointerId))refresh();};
+ addEventListener('pointermove',mv,{capture:true,passive:false});
+ ['pointerup','pointercancel'].forEach(t=>addEventListener(t,up,{capture:true}));
+ addEventListener('lostpointercapture',up,{capture:true});
+ addEventListener('pointerout',e=>{if(e.pointerType==='mouse'&&e.relatedTarget===null)up(e);},{capture:true});
+ addEventListener('mouseup',()=>{for(const [id,p] of ptrs)if(p.type==='mouse')ptrs.delete(id);refresh();},{capture:true});
+ // global touch bookkeeping (independent from pointer events) used as a safety net
+ const trim=()=>{if(!touchEv)return;let n=0,ch=0;for(const p of ptrs.values())if(p.type!=='mouse')n++;for(const [id,p] of ptrs){if(n<=touchCount)break;if(p.type!=='mouse'){ptrs.delete(id);n--;ch=1;}}if(ch)refresh();};
+ const tt=e=>{touchEv=true;touchCount=e.touches?e.touches.length:0;if(touchCount===0)releaseTouch();else trim();};
+ ['touchstart','touchend','touchcancel'].forEach(t=>addEventListener(t,tt,{capture:true,passive:true}));
+ // release everything when the page loses focus / orientation changes
+ ['blur','pagehide','orientationchange','resize','freeze'].forEach(t=>addEventListener(t,releaseAll));
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseAll();});
+ document.addEventListener('contextmenu',e=>{if(ptrs.size)e.preventDefault();});
+ let pm=false;
+ function guard(){ // called every frame
+  if(touchEv&&touchCount===0&&(ptrs.size||Object.keys(held).length)){let t=false;for(const p of ptrs.values())if(p.type!=='mouse')t=true;if(t||!ptrs.size)releaseTouch();}
+  trim();const m=!!(paused||mapOpen||devOpen);if(m&&!pm)releaseAll();pm=m;}
+ return {releaseAll,releaseTouch,guard,ptrs,held,get touchCount(){return touchCount;}};
+})();
 cv.addEventListener('pointerdown',()=>anyPress=true);
 // ---------- DEV MODE ----------
 const DEV_ALLOWED=true; // false para la versión de tienda: elimina por completo el modo desarrollador
@@ -1143,7 +1188,7 @@ function waveCleared(){clearSkels();wave++;
  else waveDelay=70;}
 // ---------- UPDATE ----------
 function update(){
- if(devOpen){clearPR();anyPress=false;return;}if(DEV){if(DEVF.inf&&P){P.sp=100;P.en=100;}}
+ TCH.guard(); if(devOpen){clearPR();anyPress=false;return;}if(DEV){if(DEVF.inf&&P){P.sp=100;P.en=100;}}
  pollPad();if(toastT>0)toastT--;
   if(PR.map&&state==='play'&&!paused&&!trans){mapOpen=!mapOpen;mapT=0;}
   if(mapOpen){if(state!=='play')mapOpen=false;else{mapT++;if(anyPress&&mapT>12)mapOpen=false;clearPR();anyPress=false;return;}}
