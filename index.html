@@ -18,27 +18,29 @@ body{display:flex;align-items:center;justify-content:center}
 #game{position:relative;width:min(100vw,calc(100vh*16/9));height:min(100vh,calc(100vw*9/16))}
 canvas{width:100%;height:100%;display:block;background:#000}
 .tc{position:absolute;inset:0;pointer-events:none}
-.btn{position:absolute;pointer-events:auto;width:clamp(46px,11vh,70px);height:clamp(46px,11vh,70px);border-radius:50%;
- background:rgba(212,175,55,.18);border:2px solid rgba(241,196,15,.6);color:#fff;font-size:clamp(16px,4.5vh,26px);
+.btn{position:absolute;pointer-events:auto;width:var(--b);height:var(--b);border-radius:50%;
+ background:rgba(212,175,55,.18);border:2px solid rgba(241,196,15,.6);color:#fff;font-size:clamp(20px,calc(5.4*var(--g)),32px);
  display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(0,0,0,.6),inset 0 0 10px rgba(255,200,80,.15);opacity:.85}
 .btn.on{background:rgba(243,156,18,.6);transform:scale(.92)}
-#game{--b:clamp(46px,11vh,70px);--p:clamp(54px,13vh,82px);--sw:clamp(32px,7.5vh,44px)}
-#dp{position:absolute;left:2.5%;bottom:2.5%;width:calc(2*var(--p) + var(--b));height:calc(2*var(--p) + var(--b));pointer-events:auto;touch-action:none;border-radius:50%;
+#game{--g:min(1vh,.5625vw);--b:clamp(54px,calc(15*var(--g)),76px);--p:calc(var(--b) + 8px);--d:clamp(56px,calc(15.5*var(--g)),80px);--pd:calc(var(--d) + 2px);--sw:clamp(36px,calc(9.5*var(--g)),50px)}
+#dp{position:absolute;left:2%;bottom:3%;width:calc(2*var(--pd) + var(--d));height:calc(2*var(--pd) + var(--d));pointer-events:auto;touch-action:none;border-radius:50%;
  background:radial-gradient(circle,rgba(212,175,55,.10) 0 30%,rgba(0,0,0,.18) 31% 100%);border:1px solid rgba(241,196,15,.22);box-shadow:inset 0 0 18px rgba(0,0,0,.35)}
-#dp .dk{position:absolute;width:var(--b);height:var(--b);border-radius:28%;background:rgba(212,175,55,.18);border:2px solid rgba(241,196,15,.6);color:#fff;font-size:clamp(16px,4.5vh,26px);
+#dp .dk{position:absolute;width:var(--d);height:var(--d);border-radius:28%;background:rgba(212,175,55,.18);border:2px solid rgba(241,196,15,.6);color:#fff;font-size:clamp(18px,calc(5.2*var(--g)),32px);
  display:flex;align-items:center;justify-content:center;opacity:.9;pointer-events:none;box-shadow:0 0 10px rgba(0,0,0,.55),inset 0 0 8px rgba(255,200,80,.15)}
 #dp .dk.on{background:rgba(243,156,18,.6);transform:scale(.92)}
-#dp [data-d=up]{left:var(--p);top:0;background:rgba(52,152,219,.3);border-color:#54a0ff;border-radius:28% 28% 12% 12%}
-#dp [data-d=down]{left:var(--p);top:calc(2*var(--p));background:rgba(120,120,140,.25);border-color:#aab;border-radius:12% 12% 28% 28%}
-#dp [data-d=left]{left:0;top:var(--p);border-radius:28% 12% 12% 28%}
-#dp [data-d=right]{left:calc(2*var(--p));top:var(--p);border-radius:12% 28% 28% 12%}
-#bDash{right:2.5%;bottom:5%;background:rgba(155,89,182,.3);border-color:#c39bd3}
+#dp [data-d=up]{left:var(--pd);top:0;border-radius:28% 28% 12% 12%;flex-direction:column;line-height:1}
+#dp [data-d=up]::after{content:'MIRAR';font:bold clamp(7px,calc(2.2*var(--g)),10px) Georgia;color:#f1d98a;margin-top:2px}
+#dp [data-d=down]{left:var(--pd);top:calc(2*var(--pd));background:rgba(120,120,140,.25);border-color:#aab;border-radius:12% 12% 28% 28%}
+#dp [data-d=left]{left:0;top:var(--pd);border-radius:28% 12% 12% 28%}
+#dp [data-d=right]{left:calc(2*var(--pd));top:var(--pd);border-radius:12% 28% 28% 12%}
+#bJ{right:2.5%;bottom:5%;background:rgba(52,152,219,.3);border-color:#54a0ff}
 #bS{right:calc(2.5% + var(--p));bottom:5%;background:rgba(231,76,60,.3);border-color:#ff6b6b}
 #bP{right:calc(2.5% + 2*var(--p));bottom:5%}
-#bSl{right:2.5%;bottom:calc(5% + var(--p));background:rgba(120,200,255,.22);border-color:#9fd8ff}
+#bDash{right:2.5%;bottom:calc(5% + var(--p));background:rgba(155,89,182,.3);border-color:#c39bd3}
 #bO{right:calc(2.5% + var(--p));bottom:calc(5% + var(--p));background:rgba(255,190,60,.25)}
 #bX{right:calc(2.5% + 2*var(--p));bottom:calc(5% + var(--p));background:rgba(255,120,0,.3);border-color:#ffd166}
-#bSw{right:calc(2.5% + 2*var(--p) + (var(--b) - var(--sw))/2);bottom:calc(5% + var(--p) + var(--b) + 6px);width:var(--sw);height:var(--sw);font-size:clamp(13px,3.2vh,18px);background:rgba(255,200,80,.2);border-color:#ffd166}
+#bSl{right:2.5%;bottom:calc(5% + 2*var(--p));background:rgba(120,200,255,.22);border-color:#9fd8ff}
+#bSw{right:calc(2.5% + 2*var(--p) + (var(--b) - var(--sw))/2);bottom:calc(5% + var(--p) + var(--b) + 6px);width:var(--sw);height:var(--sw);font-size:clamp(14px,calc(3.6*var(--g)),20px);background:rgba(255,200,80,.2);border-color:#ffd166}
 #bX.ready{animation:pulse .6s infinite alternate}
 @keyframes pulse{to{box-shadow:0 0 22px #ffcc33,inset 0 0 14px #fff3}}
 #rot{display:none;position:fixed;inset:0;background:#000;color:#f1c40f;align-items:center;justify-content:center;text-align:center;font-size:22px;z-index:9;padding:20px}
@@ -60,6 +62,7 @@ canvas{width:100%;height:100%;display:block;background:#000}
 <div id="bMap">🗺</div>
 <div class="tc">
  <div id="dp"><div class="dk" data-d="up">▲</div><div class="dk" data-d="left">◀</div><div class="dk" data-d="right">▶</div><div class="dk" data-d="down">▼</div></div>
+ <div class="btn" id="bJ" data-k="jump">▲</div>
  <div class="btn" id="bDash" data-k="dash">»</div>
  <div class="btn" id="bP" data-k="punch">👊</div>
  <div class="btn" id="bS" data-k="sword">⚔️</div>
@@ -75,10 +78,10 @@ const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 const W=800,H=450,FLOOR=392;let WORLD=1500;
 const rnd=(a,b)=>a+Math.random()*(b-a), clamp=(v,a,b)=>v<a?a:v>b?b:v;
 // ---------- INPUT ----------
-const K={down:0,left:0,right:0,jump:0,punch:0,sword:0,orb:0,special:0,dash:0};
+const K={down:0,left:0,right:0,jump:0,lookup:0,punch:0,sword:0,orb:0,special:0,dash:0};
 const PR={}; let anyPress=false;
 function press(k,v){ if(v&&!K[k]){PR[k]=1;anyPress=true;} K[k]=v; }
-const keymap={ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right',ArrowUp:'jump',w:'jump',W:'jump',' ':'jump',
+const keymap={ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right',ArrowUp:'jump',w:'jump',W:'jump',' ':'jump',v:'lookup',V:'lookup',
  j:'punch',J:'punch',k:'sword',K:'sword',l:'orb',L:'orb',i:'special',I:'special',Shift:'dash',u:'dash',U:'dash',Enter:'jump',c:'slide',C:'slide',q:'swap',Q:'swap',m:'map',M:'map'};
 addEventListener('keydown',e=>{if(e.key==='Escape'&&mapOpen){mapOpen=false;return;}if((e.key==='Escape'||e.key==='p'||e.key==='P')&&state==='play'){paused=!paused;return;}const k=keymap[e.key];if(k){press(k,1);e.preventDefault();}else anyPress=true;});
 addEventListener('keyup',e=>{const k=keymap[e.key];if(k)press(k,0);});
@@ -87,7 +90,7 @@ document.querySelectorAll('.btn').forEach(b=>{const k=b.dataset.k;
  const off=e=>{press(k,0);b.classList.remove('on');};
  b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('lostpointercapture',off);});
 (()=>{const dp=document.getElementById('dp');if(!dp)return;const els={};dp.querySelectorAll('.dk').forEach(e=>els[e.dataset.d]=e);
- const map={left:'left',right:'right',up:'jump',down:'down'};let pid=null;
+ const map={left:'left',right:'right',up:'lookup',down:'down'};let pid=null;
  const apply=e=>{const r=dp.getBoundingClientRect(),nx=((e.clientX-r.left)/r.width-.5)*2,ny=((e.clientY-r.top)/r.height-.5)*2;
   const st={left:nx<-.28,right:nx>.28,up:ny<-.28,down:ny>.28};for(const d in st){press(map[d],st[d]?1:0);els[d].classList.toggle('on',st[d]);}};
  const rel=()=>{pid=null;for(const d in map){press(map[d],0);els[d].classList.remove('on');}};
@@ -203,7 +206,7 @@ const STAGES=[
 const ENDING=['El Señor Oscuro cae de rodillas.\nSu armadura se agrieta... y se vacía.','Tras el altar, entre el polvo de siglos,\nbrilla un fragmento de cristal dorado.','Es el Fragmento de la Profecía.'];
 const VERSE='"Cuando el sol sangre sobre el trono de ceniza,\nla hija del alba reunirá lo que fue roto.\nSiete fragmentos, siete juramentos:\ny el que porte la luz, despertará al dios dormido."';
 // ---------- STATE ----------
-let state='title',stage=0,wave=0,cam=0,shake=0,hitstop=0,frame=0,flash=0,banner=null,cards=[],cardI=0,cardT=0,afterCards=null,waveDelay=0,victoryT=0;
+let camY=0,state='title',stage=0,wave=0,cam=0,shake=0,hitstop=0,frame=0,flash=0,banner=null,cards=[],cardI=0,cardT=0,afterCards=null,waveDelay=0,victoryT=0;
 let P,enemies=[],eproj=[],pproj=[],parts=[],texts=[],weather=[],platforms=[];
 let torches=[160,560,960,1340];
 let gates=[],chests=[],altars=[],doors=[],mapOpen=false,mapT=0,trans=null;
@@ -680,6 +683,7 @@ function aiUpdate(e){
   break;}
 }
 // ---------- PLAYER ATTACKS ----------
+const LOOKY=38; // desplazamiento vertical de cámara (px) al mantener MIRAR ARRIBA
 const ATK={punch:{dur:16,a:4,b:9,rng:52,dmg:[8,9,16],kb:3},sword:{dur:26,a:8,b:15,rng:128,dmg:[24],kb:6},orb:{dur:18}};
 function hitEnemy(e,d,kind,dir){
  if(e.inv>0||e.dead)return;d=Math.round(d*atkMul());if(e.type==='gorrath')d=Math.round(d*(e.st==='expose'?3:e.phase===3?.7:1));
@@ -841,7 +845,7 @@ function update(){
  if(P.rootT>0){P.rootT--;K._r=1;}
  if(P.poison>0){P.poison--;if(P.poison%24===0&&P.hp>1){P.hp-=1;addText(P.x+rnd(-8,8),P.y-P.h-4,'1','#7f7');}}
  if(P.slow>0)P.slow--;
- if(P.inv>0)P.inv--;if(P.hurtT>0)P.hurtT--;if(P.comboT>0)P.comboT--;if(P.dashCd>0)P.dashCd--;if(P.specT>0)P.specT--;if(P.rT>0)P.rT--;if(P.rCd>0)P.rCd--;updSpecs();if(PR.swap)cycleSpec();
+ if(P.inv>0)P.inv--;if(P.hurtT>0)P.hurtT--;if(P.comboT>0)P.comboT--;if(P.dashCd>0)P.dashCd--;P.look=(K.lookup&&state==='play'&&!P.crouch&&!P.slideT&&!P.grab)?1:0;camY+=((P.look?LOOKY:0)-camY)*.14;if(Math.abs(camY)<.2&&!P.look)camY=0;if(P.specT>0)P.specT--;if(P.rT>0)P.rT--;if(P.rCd>0)P.rCd--;updSpecs();if(PR.swap)cycleSpec();
  P.en=Math.min(100,P.en+.22);
  const busy=P.atkT>0&&P.atk==='sword';
  if(P.dashT>0){P.dashT--;P.vx=P.f*11;if(frame%2===0)parts.push({x:P.x,y:P.y,vx:0,vy:0,life:12,ghost:2,f:P.f,s:0});}
@@ -1199,7 +1203,7 @@ function render(){
  ctx.save();if(shake)ctx.translate(rnd(-shake,shake),rnd(-shake,shake));
  if(state!=='title'){const nb=document.getElementById('bNew');if(nb&&nb.style.display!=='none')nb.style.display='none';}if(state==='title'){drawTitle();}
  else if(state==='ending'){drawEnding();}
- else{drawPlay();drawAtmo();if(state!=='cards')drawHUD();
+ else{if(state==='play'&&camY>.5){const cy=Math.ceil(camY);ctx.save();ctx.translate(0,camY);drawPlay();ctx.restore();ctx.drawImage(cv,0,cy,W,1,0,0,W,cy);}else drawPlay();drawAtmo();if(state!=='cards')drawHUD();
   if(state==='cards')drawCards();
   if(state==='over'){ctx.fillStyle='rgba(40,0,0,.7)';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.font='bold 40px Georgia';ctx.fillStyle='#ff5252';ctx.fillText('HAS CAÍDO EN COMBATE',W/2,200);
    ctx.font='17px Georgia';ctx.fillStyle='#ddd';ctx.fillText('El sol no se apaga. Toca para despertar en el último Altar del Sol.',W/2,245);ctx.textAlign='left';}
