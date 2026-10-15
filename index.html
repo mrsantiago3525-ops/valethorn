@@ -258,7 +258,7 @@ const VERSE='"Cuando el sol sangre sobre el trono de ceniza,\nla hija del alba r
 let camY=0,state='title',stage=0,wave=0,cam=0,shake=0,hitstop=0,frame=0,flash=0,banner=null,cards=[],cardI=0,cardT=0,afterCards=null,waveDelay=0,victoryT=0;
 let P,enemies=[],eproj=[],pproj=[],parts=[],texts=[],weather=[],platforms=[];
 let torches=[160,560,960,1340];
-let gates=[],chests=[],altars=[],doors=[],solids=[],mapOpen=false,mapT=0,trans=null;
+let liftArm=1,gates=[],chests=[],altars=[],doors=[],solids=[],mapOpen=false,mapT=0,trans=null;
 let G1=3400,pits=[],lastSafe=200,eyes=[];let claws=[],tents=[],scrolls=[],demoEnd=false;let gateOn=false,gateT=0,camMin=0,routeI=0,urns=[],pickups=[],spikes=[],ROUTE=[];
 // ---------- SOULS / PROGRESS ----------
 const UNDEAD={skel:1,soldier:3,shield:4,archer:3,captain:20,wraith:4,knight:30,wyvern:4,cwraith:5,asm:5,nhaz:30};
@@ -416,7 +416,7 @@ function updProf(){const z=PZ;if(!z||state!=='play')return;
  if(readScrolls())return;
  // reliquia oculta: Garras del Osario
  if(!z.relic.got&&Math.abs(P.x-z.relic.x)<34&&Math.abs(P.y-z.relic.y)<60){z.relic.got=true;SAVE.pk.garras=1;SAVE.ab.wall=1;saveG();S('rafaga');S('pickup');flash=14;
-  showCards(['✦ RELIQUIA OBTENIDA ✦\nGARRAS DEL OSARIO','«Lo que sostuvo a un dragón sostendrá a quien se atreva a trepar.»','AGARRE DE MURO desbloqueado.\nEn el aire, mantén ◀ / ▶ hacia un MURO LISO\npara agarrarte; SALTAR para saltar de pared.\nBusca el pozo de muros lisos en las RUINAS.'],()=>{state='play';});return;}
+  showCards(['✦ RELIQUIA OBTENIDA ✦\nGARRAS DEL OSARIO','«Lo que sostuvo a un dragón sostendrá a quien se atreva a trepar.»','AGARRE DE MURO desbloqueado.\nEn el aire, mantén ◀ / ▶ hacia un MURO LISO\npara agarrarte; SALTAR para saltar de pared.\nLos pozos de muros lisos te esperan más adelante.'],()=>{state='play';});return;}
  // plataformas que ceden
  for(const p of platforms){if(!p.crum)continue;
   if(p.st===0){if(!P.air&&P.y===p.y&&P.x>p.x-6&&P.x<p.x+p.w+6){p.st=1;p.t=0;S('crumble');}}
@@ -676,14 +676,14 @@ const DOORD=[[{x:4130,to:1,tx:270,f:1,need:0},{x:300,to:2,tx:8470,f:-1,lift:1}],
 const GATED=[[{id:'r1',x:128,w:26,h:170,type:'plasma'}],[{id:'tw1',x:215,w:30,h:170,type:'storm'}],[{id:'tw2',x:215,w:30,h:170,type:'storm'},{id:'p3',x:8650,w:26,h:170,type:'plasma'}],[{id:'z4a',x:7030,w:26,h:110,type:'plasma',base:130},{id:'z4v',x:10380,w:30,h:170,type:'flame'}],[]];
 const CHESTD=[[{id:'r1',x:68,rw:'mx'}],[{id:'tw1c',x:130,rw:'mx'}],[{id:'tw2c',x:130,rw:'big'}],[{id:'z4c',x:10520,rw:'fang'}],[]];
 // v19: Ascensor (atajo Catacumbas->Ruinas), muros lisos (Agarre de Muro), paredes falsas, objetos extra por zona
-const ZSOL=[[{x:1450,w:26,y0:64,y1:270},{x:1580,w:26,y0:64,y1:270}],[],[],[],[]];
-const XPL=[[{x:1567,y:64,w:156}],[],[],[],[]];
-const XPK=[[['big',1660,64,'wl0a'],['hp2',1700,64,'wl0b']],[],[],[],[]];
+const ZSOL=[[],[],[],[],[]];
+const XPL=[[],[],[],[],[]];
+const XPK=[[],[],[],[],[]];
 const FWD=[[{id:'fw0',x:2200,items:[['soul',-16,'fw0a'],['soul',16,'fw0b'],['hp2',0,'fw0c']]}],[],[{id:'fw2',x:3260,items:[['big',-12,'fw2a'],['hp2',14,'fw2b']]}],[],[]];
 const liftOn=()=>!!(SAVE.gt&&SAVE.gt.lift||SAVE.bd.gorrath);
 const doorOpen=d=>d.lift?liftOn():(d.need==null||bossDone(d.need));
 const GT={plasma:{req:'p',c:'#ffd23a',c2:'#8a5a10',n:'SELLO SOLAR',h:'Solo el PLASMA SOLAR puede romperlo',hk:'Dispara el PLASMA SOLAR contra el sello',how:'break'},
- storm:{req:'t',c:'#ff3a70',c2:'#2a0610',n:'ESPINAS NEGRAS',h:'La TORMENTA SOLAR las quemaría',hk:'Desata la TORMENTA SOLAR junto a las espinas',how:'break'},
+ storm:{req:'t',c:'#ff3a70',c2:'#2a0610',n:'ESPINAS NEGRAS',h:'La TORMENTA SOLAR las quemaría',hk:'TORMENTA SOLAR (✺ · 60 de PODER) · el Altar cercano la recarga',how:'break'},
  flame:{req:'flame',c:'#b060ff',c2:'#301048',n:'VELO DE CORRUPCIÓN',h:'Se disolvería con la LLAMA ÁUREA',hk:'',how:'touch'},
  wall:{req:'wall',c:'#9fb4c8',c2:'#2a3240',n:'MURO LISO',h:'Pide AGARRE DE MURO',hk:'',how:'touch'},
  dash:{req:'dash',c:'#40e0ff',c2:'#06303c',n:'BARRERA DE LUZ',h:'Pide PASO SOLAR (dash aéreo)',hk:'',how:'touch'},
@@ -698,7 +698,7 @@ function buildZoneObjs(z){altars=ALTD[z].map((x,i)=>({x,i,z,cool:0}));doors=DOOR
  for(const [k,x,y,id] of XPK[z])pickups.push({x,y:y-24,vy:0,k,t:0,keep:1,id});
  for(const fw of FWD[z]){const brk=!!SAVE.gt[fw.id];urns.push({x:fw.x,y:FLOOR,b:brk?1:0,fw,hit:0,lf:-99});if(brk)for(const [k,dx,id] of fw.items)pickups.push({x:fw.x+dx,y:FLOOR-24,vy:0,k,t:0,keep:1,id});}
  pickups=pickups.filter(p=>!(p.id&&SAVE.pk[p.id]));}
-function enterZone(z,x,o){o=o||{};skQ=[];stage=z;WORLD=ZW[z];G1=ZGt[z];buildBG(z);enemies=[];eproj=[];pproj=[];souls=[];texts.length=0;
+function enterZone(z,x,o){o=o||{};liftArm=0;skQ=[];stage=z;WORLD=ZW[z];G1=ZGt[z];buildBG(z);enemies=[];eproj=[];pproj=[];souls=[];texts.length=0;
  wave=(z===1&&SAVE.bd.elf&&!SAVE.bd.witch)?1:0;mgT=0;mgX=0;demoEnd=false;
  platforms=z===4?[{x:350,y:300,w:150},{x:1000,y:300,w:150}]:[{x:420,y:310,w:140},{x:820,y:280,w:160},{x:1150,y:315,w:130}];setupLevel();buildZoneObjs(z);
  P.x=x;P.y=FLOOR;P.vx=0;P.vy=0;P.air=false;P.grab=null;P.atk=null;P.atkT=0;P.f=o.f||1;P.rootT=0;P.dashT=0;P.slideT=0;P.inv=Math.max(P.inv,45);
@@ -711,7 +711,7 @@ function toTitle(){stage=0;cam=0;camMin=0;gateOn=false;buildBG(0);enemies=[];epr
 function loadAtAltar(){let z,x;if(SAVE.az>=0&&ALTD[SAVE.az]&&ALTD[SAVE.az][SAVE.ai]!=null){z=SAVE.az;x=ALTD[z][SAVE.ai];}else{z=Math.min(SAVE.z||0,3);x=z===0?200:z<3?270:150;}
  enterZone(z,x,{f:1});if(SAVE.az>=0){const a=altars.find(a=>a.i===SAVE.ai&&a.z===z);if(a)a.cool=1;}}
 function startTrans(z,x,f){if(trans)return;trans={t:0,ph:0,z,x,f};S('slam');}
-function useAltar(a){P.hp=P.maxHp;P.en=P.maxEn;P.poison=0;P.rootT=0;P.slow=0;SAVE.az=a.z;SAVE.ai=a.i;SAVE.z=a.z;SAVE.ad[a.z+':'+a.i]=1;saveG();
+function useAltar(a){P.hp=P.maxHp;P.en=P.maxEn;if(hasAb('t'))P.sp=Math.max(P.sp,60);P.poison=0;P.rootT=0;P.slow=0;SAVE.az=a.z;SAVE.ai=a.i;SAVE.z=a.z;SAVE.ad[a.z+':'+a.i]=1;saveG();
  S('pickup');S('note');flash=Math.max(flash,8);toastTxt='✦ ALTAR DEL SOL · PROGRESO GUARDADO';toastT=140;addText(P.x,P.y-120,'VIDA Y ENERGÍA RESTAURADAS','#ffe08a');
  for(let i=0;i<34;i++)parts.push({x:a.x+rnd(-18,18),y:FLOOR-rnd(0,40),vx:rnd(-.8,.8),vy:-rnd(1.5,4.5),life:rnd(30,60),c:Math.random()<.5?'#ffe08a':'#fff6c8',s:rnd(2,4),glow:1});}
 function openChest(c){c.open=true;SAVE.ch[c.id]=1;const mxv=c.rw==='fang'?15:10;if(c.rw==='big')gainXP(40);if(c.rw==='mx'||c.rw==='fang'){SAVE.mx=(SAVE.mx||0)+mxv;const hp=P.hp;applyLv(0);P.hp=Math.min(P.maxHp,hp+mxv);}saveG();
@@ -724,11 +724,11 @@ function gateHit(type,n,test,y){for(const g of gates){if(g.open||g.type!==type)c
 function metroUpd(){const nc=NC[stage]||1,c=Math.min(nc-1,Math.floor(P.x/(WORLD/nc))),v=SAVE.vis[stage]||(SAVE.vis[stage]=[]);if(!v[c]){v[c]=1;saveG();}
  const bossLive=gateOn&&enemies.some(e=>e.boss&&!e.dead);
  for(const a of altars){const d=Math.abs(P.x-a.x);if(d>=130)a.cool=0;else if(d<34&&!a.cool&&P.y>=FLOOR-30&&!bossLive){a.cool=1;useAltar(a);}}
- for(const d of doors){if(d.lift){const near=Math.abs(P.x-d.x)<40&&!P.air&&state==='play'&&!trans;d.msgT=Math.max(0,(d.msgT||0)-1);
-   if(near&&K.down){if(!liftOn()){if(!d.msgT){d.msgT=140;addText(d.x,FLOOR-210,'Fuera de servicio','#bbb');S('clang');}d.hold=0;}else{d.hold=(d.hold||0)+1;if(d.hold===1)S('rumble');if(d.hold>=26){d.hold=0;for(const o of souls)gainXP(o.v);S('slam');startTrans(d.to,d.tx,d.f);}}}else d.hold=0;
+ for(const d of doors){if(d.lift){const near=Math.abs(P.x-d.x)<40&&!P.air&&state==='play'&&!trans;d.msgT=Math.max(0,(d.msgT||0)-1);if(!K.down)liftArm=1;
+   if(near&&K.down&&liftArm){if(!liftOn()){if(!d.msgT){d.msgT=140;addText(d.x,FLOOR-210,'Fuera de servicio','#bbb');S('clang');}d.hold=0;}else{d.hold=(d.hold||0)+1;if(d.hold===1)S('rumble');if(d.hold>=26){d.hold=0;for(const o of souls)gainXP(o.v);S('slam');startTrans(d.to,d.tx,d.f);}}}else d.hold=0;
    continue;}
   if(Math.abs(P.x-d.x)<34&&!trans&&state==='play'){if(d.need==null||bossDone(d.need)){for(const o of souls)gainXP(o.v);d.to===4?murallasTeaser():startTrans(d.to,d.tx,d.f);}else{P.x=d.x+(d.x<WORLD/2?30:-30);}}}
- for(const g of gates){g.t++;if(g.hintT>0)g.hintT--;if(g.flash>0)g.flash--;if(g.open)continue;const T=GT[g.type];
+ for(const g of gates){g.t++;if(g.hintT>0)g.hintT--;if(!g.open&&g.type==='storm'&&hasAb('t')&&!g.sel&&Math.abs(P.x-g.x)<110){g.sel=1;if(SAVE.sel!==1){SAVE.sel=1;saveG();toastTxt='✺ TORMENTA SOLAR seleccionada';toastT=110;}}if(g.flash>0)g.flash--;if(g.open)continue;const T=GT[g.type];
   if(T.how==='touch'&&hasAb(T.req)&&Math.abs(P.x-g.x)<70){openGate(g,'touch');continue;}
   const GB=g.base||FLOOR,hw=g.w/2+P.w/2;if(P.y>GB-(g.base?g.h+170:460)+8&&(!g.base||P.y<=GB+6)&&Math.abs(P.x-g.x)<hw){P.x=P.x<g.x?g.x-hw:g.x+hw;P.vx=0;g.hintT=150;}
   for(const e of enemies)if(!g.base&&!e.fly&&!e.boss&&!e.ledge&&Math.abs(e.x-g.x)<g.w/2+e.w/2){e.x=e.x<g.x?g.x-g.w/2-e.w/2:g.x+g.w/2+e.w/2;e.vx=0;}}
